@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gratitude Generator</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f7e9f7;
+            color: #4b0082;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+        }
+
+        #container {
+            text-align: center;
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 30px 40px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            transition: all 0.3s ease;
+        }
+
+        #container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #6a1b9a;
+            font-weight: 600;
+        }
+
+        p {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #d1c4e9;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: none;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #8e24aa;
+            box-shadow: 0 0 10px rgba(142, 36, 170, 0.2);
+        }
+
+        button {
+            background-color: #8e24aa;
+            color: white;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #6a1b9a;
+        }
+
+        #response-container {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #800000;
+        }
+
+        .success {
+            color: #008000;
+        }
+
+        .error {
+            color: #ff0000;
+        }
+
+        
+        .copy-button {
+            background-color: #00c853;
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none; 
+            margin-top: 15px;
+        }
+
+        .copy-button:hover {
+            background-color: #00a152;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container">
+        <h1>Gratitude Generator</h1>
+        <p>Enter some positive moments, and let the AI create a personalized gratitude message!</p>
+        <textarea id="moments" placeholder="Enter your positive moments here..."></textarea><br>
+        <button onclick="generateGratitude()">Generate Gratitude Message</button>
+        <div id="response-container"></div>
+        <button id="copy-button" class="copy-button" onclick="copyText()">Copy to Clipboard</button>
+    </div>
+
+    <script>
+        async function generateGratitude() {
+            const moments = document.getElementById('moments').value;
+            const responseContainer = document.getElementById('response-container');
+            const copyButton = document.getElementById('copy-button');
+
+            
+            responseContainer.innerHTML = '';
+            copyButton.style.display = 'none';
+
+            if (!moments.trim()) {
+                responseContainer.innerHTML = `<p class="error">Please enter some positive moments!</p>`;
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/gratitude', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ moments })
+                });
+
+                const data = await response.json();
+
+                if (data.gratitudeMessage) {
+                    responseContainer.innerHTML = `<p class="success"><strong>Gratitude Message:</strong> ${data.gratitudeMessage}</p>`;
+                    copyButton.style.display = 'block'; // Show the copy button
+                    copyButton.setAttribute('data-text', data.gratitudeMessage); 
+                } else if (data.error) {
+                    responseContainer.innerHTML = `<p class="error">${data.error}</p>`;
+                } else {
+                    responseContainer.innerHTML = `<p class="error">Failed to generate gratitude message. Please try again!</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                responseContainer.innerHTML = `<p class="error">Failed to generate gratitude message. Please try again!</p>`;
+            }
+        }
+
+        function copyText() {
+            const copyButton = document.getElementById('copy-button');
+            const textToCopy = copyButton.getAttribute('data-text');
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Gratitude message copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
